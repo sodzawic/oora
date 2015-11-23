@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "prof.h"
+
 /* for Fortran - j*n + i */
 //#define IDX(i, j, n)	(((i) * (n)) + (j))
 #define IDX(i, j, n) (((j)+ (i)*(n)))
@@ -35,31 +37,36 @@ chol(double *A, unsigned int n)
 }
 
 int
-main()
+main(int argc, char **argv)
 {
 	double *A;
-	int i, j, n, ret;
+	int i, j, n;
+    if (argc > 1) {
+        n = 3;
+        A = calloc(n*n, sizeof(double));
+        assert(A != NULL);
 
-	n = 3;
-	A = calloc(n*n, sizeof(double));
-	assert(A != NULL);
+        A[IDX(0, 0, n)] = 4.0;   A[IDX(0, 1, n)] = 12.0;  A[IDX(0, 2, n)] = -16.0;
+        A[IDX(1, 0, n)] = 12.0;  A[IDX(1, 1, n)] = 37.0;  A[IDX(1, 2, n)] = -43.0;
+        A[IDX(2, 0, n)] = -16.0; A[IDX(2, 1, n)] = -43.0; A[IDX(2, 2, n)] = 98.0;
 
-	A[IDX(0, 0, n)] = 4.0;   A[IDX(0, 1, n)] = 12.0;  A[IDX(0, 2, n)] = -16.0;
-	A[IDX(1, 0, n)] = 12.0;  A[IDX(1, 1, n)] = 37.0;  A[IDX(1, 2, n)] = -43.0;
-	A[IDX(2, 0, n)] = -16.0; A[IDX(2, 1, n)] = -43.0; A[IDX(2, 2, n)] = 98.0;
+        struct papi_context context = papi_start(argv[1]);
+        if (chol(A, 3)) {
+            fprintf(stderr, "Error: matrix is either not symmetric or not positive definite.\n");
+        } else {
+            papi_stop(context);
+            fprintf(stdout, "Tri(L) = \n");
+            for (i = 0; i < 3; i++) {
+                for (j = 0; j <= i; j++)
+                    printf("%2.8lf\t", A[IDX(i, j, n)]);
+                printf("\n");
+            }
+        }
 
-	if (chol(A, 3)) {
-		fprintf(stderr, "Error: matrix is either not symmetric or not positive definite.\n");
-	} else {
-		fprintf(stdout, "Tri(L) = \n");
-		for (i = 0; i < 3; i++) {
-			for (j = 0; j <= i; j++)
-				printf("%2.8lf\t", A[IDX(i, j, n)]);
-			printf("\n");
-		}
-	}
-
-	free(A);
+        free(A);
+    } else {
+        printf("%s <event>\n", argv[0]);
+    }
 	return 0;
 }
 
