@@ -8,7 +8,7 @@ HEADER = prof.h
 
 all: ${TARGET}
 
-${TARGER}: ${HEADER}
+${TARGET}: ${HEADER}
 
 clean:
 	- rm -rf ${TARGET}
