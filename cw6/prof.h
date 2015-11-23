@@ -9,6 +9,7 @@ struct papi_context {
     int eventSet;
     int eventId;
     const char *eventName;
+    double startTime;
 };
 
 struct papi_context papi_start(const char *ev_name) {
@@ -46,6 +47,8 @@ struct papi_context papi_start(const char *ev_name) {
         fprintf(stderr, "Could not start counters: %s\n", PAPI_strerror(papi_err));
         return context;
     }
+
+    context.startTime = PAPI_get_virt_cyc();
     return context;
 }
 
@@ -57,7 +60,9 @@ void papi_stop(struct papi_context context) {
             fprintf(stderr, "Could not get values: %s\n", PAPI_strerror(papi_err));
             return;
         }
-        printf("Performance counters for factorization stage: \n");
+        double endTime = PAPI_get_virt_cyc();
+        printf("Time: %g\n", endTime - context.startTime);
+        printf("Performance counters: \n");
         printf("%s %lld\n", context.eventName, values[0]);
     }
 }
